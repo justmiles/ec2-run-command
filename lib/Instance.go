@@ -103,8 +103,8 @@ func (instance *Instance) StartInstance() (err error) {
 		var ec2Tags []*ec2.Tag
 		for key, value := range *instance.Tags {
 			ec2Tags = append(ec2Tags, &ec2.Tag{
-				Key:   &key,
-				Value: &value,
+				Key:   aws.String(key),
+				Value: aws.String(value),
 			})
 		}
 
@@ -364,21 +364,16 @@ func (instance *Instance) String() string {
 		s = s + "Tags:\n"
 		for key, value := range *instance.Tags {
 			s = s + fmt.Sprintf("\t%s: %s\n", key, value)
-
 		}
 	}
 
-	if instance.Type != nil {
-		s = s + fmt.Sprintf("Type: %s\n", *instance.Type)
-	}
+	s = s + fmt.Sprintf("Type: %s\n", stringPointerValueOrNil(instance.Type, ""))
 
 	if instance.BidPrice != nil {
 		s = s + fmt.Sprintf("BidPrice: %f\n", *instance.BidPrice)
 	}
 
-	if instance.SpotPrice != nil {
-		s = s + fmt.Sprintf("SpotPrice: %s\n", *instance.SpotPrice)
-	}
+	s = s + fmt.Sprintf("SpotPrice: %s\n", stringPointerValueOrNil(instance.SpotPrice, ""))
 
 	if instance.UserData != nil {
 		s = s + fmt.Sprintf("UserData: %s\n", *instance.UserData)
@@ -400,13 +395,9 @@ func (instance *Instance) String() string {
 		s = s + fmt.Sprintf("NoTermination: %t\n", *instance.NoTermination)
 	}
 
-	if instance.TTYColor != nil {
-		s = s + fmt.Sprintf("TTYColor: %s\n", *instance.TTYColor)
-	}
+	s = s + fmt.Sprintf("TTYColor: %s\n", stringPointerValueOrNil(instance.TTYColor, ""))
 
-	if instance.PrivateIPAddress != nil {
-		s = s + fmt.Sprintf("PrivateIPAddress: %s\n", *instance.PrivateIPAddress)
-	}
+	s = s + fmt.Sprintf("PrivateIPAddress: %s\n", stringPointerValueOrNil(instance.PrivateIPAddress, ""))
 
 	if instance.InstanceID != nil {
 		s = s + fmt.Sprintf("InstanceID: %s\n", *instance.InstanceID)

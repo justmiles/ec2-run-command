@@ -89,6 +89,7 @@ var run = &cobra.Command{
 				err = instance.Start()
 				if err != nil {
 					instance.Terminate()
+					return
 				}
 
 				fmt.Printf(

@@ -1,12 +1,11 @@
 package ec2
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-
 )
 
 // Hash returns a random hash n characters long
@@ -20,10 +19,9 @@ func Hash(n int) string {
 	for i := range b {
 		b[i] = letterRunes[rand.Intn(len(letterRunes))]
 	}
-	
+
 	return string(b)
 }
-
 
 // Generate a New SSH key in AWS based on instance options returns pointers to the key name and identity
 func newKeyPair() (sshKeyName, sshKeyIdentity *string, err error) {
@@ -40,4 +38,11 @@ func newKeyPair() (sshKeyName, sshKeyIdentity *string, err error) {
 
 	return &name, result.KeyMaterial, nil
 
+}
+
+func stringPointerValueOrNil(i *string, s string) string {
+	if i == nil {
+		return s
+	}
+	return *i
 }

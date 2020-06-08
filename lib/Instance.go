@@ -71,7 +71,6 @@ func (instance *Instance) Start() error {
 
 // StartInstance launches a new EC2 instance
 func (instance *Instance) StartInstance() (err error) {
-
 	ri := ec2.RunInstancesInput{
 		ImageId:      instance.AMIID,
 		InstanceType: instance.Type,

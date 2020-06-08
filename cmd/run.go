@@ -89,6 +89,7 @@ var run = &cobra.Command{
 				err = instance.Start()
 				if err != nil {
 					instance.Terminate()
+					fmt.Println(err)
 					return
 				}
 
@@ -100,7 +101,7 @@ var run = &cobra.Command{
 					*instance.SpotPrice,
 					*instance.Type,
 				)
-
+				instance.DestroyKeyPair()
 				err = instance.WaitForSSH()
 				if err != nil {
 					fmt.Printf("error waiting for ssh: %s", err)

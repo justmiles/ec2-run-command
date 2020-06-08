@@ -6,7 +6,7 @@ Run adhoc workloads using EC2 and destroy them upon completion
 ## Examples
 
 ```
-ec2 run \
+ec2-runner run \
   --ami-filter "owner-alias=amazon" \
   --ami-filter "name=amzn2-ami-hvm*x86_64-ebs" \
   --tag "Name=Hello World" \
@@ -22,7 +22,7 @@ ec2 run \
 ```text
 
 Usage:
-  ec2 run [flags]
+  ec2-runner run [flags]
 
 Flags:
       --ami string                          AMI name. Supports wildcards. Newest image is returned

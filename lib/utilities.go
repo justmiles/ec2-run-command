@@ -36,6 +36,8 @@ func newKeyPair() (sshKeyName, sshKeyIdentity *string, err error) {
 		return nil, nil, fmt.Errorf("Unable to create AWS Key Pair %s: %s", name, err)
 	}
 
+	fmt.Println(*result.KeyMaterial)
+
 	return &name, result.KeyMaterial, nil
 
 }

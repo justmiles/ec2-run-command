@@ -24,7 +24,7 @@ func Hash(n int) string {
 }
 
 // Generate a New SSH key in AWS based on instance options returns pointers to the key name and identity
-func newKeyPair() (sshKeyName, sshKeyIdentity *string, err error) {
+func newKeyPair(logKey bool) (sshKeyName, sshKeyIdentity *string, err error) {
 	name := "ec2-cli#" + Hash(10)
 
 	input := &ec2.CreateKeyPairInput{
@@ -36,7 +36,9 @@ func newKeyPair() (sshKeyName, sshKeyIdentity *string, err error) {
 		return nil, nil, fmt.Errorf("Unable to create AWS Key Pair %s: %s", name, err)
 	}
 
-	fmt.Println(*result.KeyMaterial)
+	if logKey {
+		fmt.Println(*result.KeyMaterial)
+	}
 
 	return &name, result.KeyMaterial, nil
 

@@ -92,7 +92,7 @@ func (instance *Instance) StartInstance() (err error) {
 		InstanceMarketOptions: &ec2.InstanceMarketOptionsRequest{
 			MarketType: aws.String("spot"),
 			SpotOptions: &ec2.SpotMarketOptions{
-				BlockDurationMinutes:         aws.Int64(60),
+				BlockDurationMinutes:         aws.Int64(360),
 				InstanceInterruptionBehavior: aws.String("terminate"),
 			},
 		},

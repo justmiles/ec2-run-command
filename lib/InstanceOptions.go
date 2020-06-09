@@ -320,6 +320,10 @@ func (opts *InstanceOptions) DetermineSubnetID() (*string, error) {
 		return nil, fmt.Errorf("Unable to find subnet: %s", err)
 	}
 
+	if len(result.Subnets) == 0 {
+		return nil, fmt.Errorf("No subnets matching current filters")
+	}
+
 	// TODO: return random subnet instead of just the first
 	return result.Subnets[0].SubnetId, nil
 }
@@ -351,7 +355,7 @@ func (opts *InstanceOptions) DetermineSSHConfigs() (sshKeyName *string, sshConfi
 
 		// Generate an ephemeral SSHKey if one is not set
 	} else {
-		sshKeyName, sshKeyIdentity, err = newKeyPair()
+		sshKeyName, sshKeyIdentity, err = newKeyPair(opts.NoTermination)
 		if err != nil {
 			return nil, nil, err
 		}

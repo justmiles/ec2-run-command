@@ -88,8 +88,11 @@ var run = &cobra.Command{
 				defer wg.Done()
 				err = instance.Start()
 				if err != nil {
-					instance.Terminate()
 					fmt.Println(err)
+					err = instance.Terminate()
+					if err != nil {
+						fmt.Println(err)
+					}
 					return
 				}
 

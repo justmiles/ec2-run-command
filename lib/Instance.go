@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -276,12 +277,13 @@ func (instance Instance) UploadFile(filename string) (string, error) {
 	}
 
 	// Finaly, copy the file over
-	err = client.CopyFile(f, "/tmp/"+f.Name(), "0755")
+	remote_file_path := "/tmp/" + filepath.Base(f.Name())
+	err = client.CopyFile(f, remote_file_path, "0755")
 	if err != nil {
 		return "", fmt.Errorf("Error while copying file: %s", err.Error())
 	}
 
-	return "/tmp/" + f.Name(), nil
+	return remote_file_path, nil
 }
 
 // Terminate this instance

@@ -5,11 +5,13 @@ Run adhoc workloads using EC2 and destroy them upon completion
 
 ## Examples
 
-```
+```bash
 ec2-runner run \
   --ami-filter "owner-alias=amazon" \
   --ami-filter "name=amzn2-ami-hvm*x86_64-ebs" \
   --tag "Name=Hello World" \
+  --environment "ENVIRONMENT=dev" \
+  --environment "AWS_DEFAULT_REGION=us-east-1" \
   --subnet-filter "tag:Environment=qa" \
   --subnet-filter "tag:Type=private" \
   --security-group-filter "group-name=qa_private" \
@@ -31,6 +33,7 @@ Flags:
   -c, --count int                           Number of instances to invoke (default 1)
       --dry-run                             Show details about the instance it would start, but don't actually start it
       --entrypoint string                   path to entrypoint script
+      --environment stringArray             Environment variables exported after user-data and before entry-point or command. Syntax: 'Key=Value'
   -h, --help                                help for run
   -i, --identify-file string                If using ssh-key, pass in the identitiy file
       --instance-profile string             Role to attach to your instance

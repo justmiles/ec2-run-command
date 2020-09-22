@@ -57,6 +57,7 @@ type Instance struct {
 	InstanceID         *string
 	ExitCode           *int
 	Command            *string
+	EnvVars            *map[string]string
 }
 
 // Start the command
@@ -213,6 +214,13 @@ func (instance *Instance) InvokeCommand() (err error) {
 	go io.Copy(os.Stderr, stderr)
 
 	var commands []string
+
+	if len(*instance.EnvVars) > 0 {
+		for key, value := range *instance.EnvVars {
+			exportVarCommand := fmt.Sprintf("export %s=\"%s\"", key, value)
+			commands = append(commands, exportVarCommand)
+		}
+	}
 
 	if instance.EntrypointFile != nil {
 		uploadedFilePath, err := instance.UploadFile(*instance.EntrypointFile)

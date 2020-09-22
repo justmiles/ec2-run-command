@@ -38,7 +38,7 @@ func init() {
 	run.PersistentFlags().StringVar(&opts.User, "user", "ec2-user", "SSH user to connect to your instance with")
 	run.PersistentFlags().StringVarP(&opts.IdentityFile, "identify-file", "i", "", "If using ssh-key, pass in the identitiy file")
 
-	run.PersistentFlags().StringArrayVar(&opts.Tags, "tag", nil, "")
+	run.PersistentFlags().StringArrayVar(&opts.Tags, "tag", nil, "Key=Value pair")
 	run.PersistentFlags().StringArrayVar(&opts.SecurityGroupFilters, "security-group-filter", nil, "Filters for your Security Groups. Syntax: Name=string,Values=string,string ...")
 	run.PersistentFlags().StringArrayVar(&opts.SecurityGroups, "security-group", nil, "Security group name")
 
@@ -46,11 +46,13 @@ func init() {
 
 	// run.PersistentFlags().Float64Var(&opts.BidPrice, "bid-price", 0, "")
 
+	run.PersistentFlags().StringArrayVar(&opts.EnvVars, "environment", nil, "Environment variables exported after user-data and before entry-point or command. Syntax: 'Key=Value'")
+
 	run.PersistentFlags().StringVar(&opts.UserDataFile, "user-data", "", "path to user-data script")
 	run.PersistentFlags().StringVar(&opts.EntrypointFile, "entrypoint", "", "path to entrypoint script")
 
 	run.PersistentFlags().BoolVar(&opts.WaitOnCloudInit, "no-wait-cloud-init", true, "Do not wait for user-data to complete before invoking entrypoint and command")
-	run.PersistentFlags().BoolVar(&opts.NoTermination, "no-terminate", false, "Do not terminate the instance upon completion")
+	run.PersistentFlags().BoolVar(&opts.NoTermination, "no-terminate", false, "Do not terminate the instance upon completion (default true)")
 	// run.PersistentFlags().BoolVarP(&opts.Attach, "attach", "a", false, "")
 
 	run.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "Show details about the instance it would start, but don't actually start it")

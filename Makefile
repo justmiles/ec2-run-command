@@ -1,5 +1,5 @@
 .PHONY: build
-VERSION=0.0.5
+VERSION=0.1.0
 
 build: COMMIT=$(shell git rev-list -1 HEAD | grep -o "^.\{10\}")
 build: DATE=$(shell date +'%Y-%m-%d %H:%M')

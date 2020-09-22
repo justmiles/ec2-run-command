@@ -40,6 +40,7 @@ type InstanceOptions struct {
 	Attach               bool
 	NoTermination        bool
 	Command              string
+	EnvVars              []string
 }
 
 // ttyColors generated with the following
@@ -113,6 +114,10 @@ func (opts *InstanceOptions) Instances() (instances []*Instance, err error) {
 	if err != nil {
 		return nil, err
 	}
+	envVars, err := opts.ParseEnvVars()
+	if err != nil {
+		return nil, err
+	}
 
 	// Build each Instance's configs
 	for i := 1; i <= opts.Count; i++ {
@@ -130,6 +135,7 @@ func (opts *InstanceOptions) Instances() (instances []*Instance, err error) {
 		instance.NoTermination = &opts.NoTermination
 		instance.SSHPort = &opts.SSHPort
 		instance.ExitCode = aws.Int(-1)
+		instance.EnvVars = envVars
 
 		if i > 1 {
 			instance.TTYColor = &ttyColors[i]
@@ -175,6 +181,20 @@ func (opts *InstanceOptions) ParseTags() (*map[string]string, error) {
 	}
 
 	return &tags, nil
+}
+
+// ParseEnvVars and return a EnvVar map for Instance
+func (opts *InstanceOptions) ParseEnvVars() (*map[string]string, error) {
+	envVars := make(map[string]string)
+	for _, envVar := range opts.EnvVars {
+		s := strings.SplitN(envVar, "=", 2)
+		if len(s) != 2 {
+			return &envVars, fmt.Errorf("unable to derive environment from: %s", envVar)
+		}
+		envVars[s[0]] = s[1]
+	}
+
+	return &envVars, nil
 }
 
 // DetermineAMIID returns the AMI id using the options for AMI name or AMI Filter

@@ -42,7 +42,7 @@ func init() {
 	run.PersistentFlags().StringArrayVar(&opts.SecurityGroupFilters, "security-group-filter", nil, "Filters for your Security Groups. Syntax: Name=string,Values=string,string ...")
 	run.PersistentFlags().StringArrayVar(&opts.SecurityGroups, "security-group", nil, "Security group name")
 
-	run.PersistentFlags().StringVarP(&opts.Type, "type", "t", "t2.micro", "instance type")
+	run.PersistentFlags().StringArrayVar(&opts.InstanceTypes, "instance-type", []string{"t2.micro", "t2.small"}, "Ec2 instance type. Specify multiple instance types for a spot fleet.")
 
 	// run.PersistentFlags().Float64Var(&opts.BidPrice, "bid-price", 0, "")
 
@@ -52,11 +52,15 @@ func init() {
 	run.PersistentFlags().StringVar(&opts.EntrypointFile, "entrypoint", "", "path to entrypoint script")
 
 	run.PersistentFlags().BoolVar(&opts.WaitOnCloudInit, "no-wait-cloud-init", true, "Do not wait for user-data to complete before invoking entrypoint and command")
-	run.PersistentFlags().BoolVar(&opts.NoTermination, "no-terminate", false, "Do not terminate the instance upon completion (default true)")
+	run.PersistentFlags().BoolVar(&opts.NoTermination, "no-terminate", false, "Do not terminate the instance upon completion.")
 	// run.PersistentFlags().BoolVarP(&opts.Attach, "attach", "a", false, "")
 
 	run.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "Show details about the instance it would start, but don't actually start it")
 
+	run.PersistentFlags().Int64Var(&opts.CreateFleetRetries, "max-fleet-retries", 10, "Number of attempts to retry a fleet request.")
+	run.PersistentFlags().StringVar(&opts.LaunchTemplateName, "launch-template-name", "ec2-cli", "Launch template name will be prefixed to a random string.")
+
+	run.PersistentFlags().Int64Var(&opts.BlockDurationInMinutes, "block-duration-minutes", 0, "The required duration for the Spot Instances (also known as Spot blocks), in minutes. This value must be a multiple of 60 (60, 120, 180, 240, 300, or 360). If set to zero this will launch a spot instance without a block duration.")
 }
 
 // process the list command
@@ -78,6 +82,7 @@ var run = &cobra.Command{
 			for _, instance := range instances {
 				fmt.Println(instance)
 				instance.DestroyKeyPair()
+				instance.DeleteLaunchTemplate()
 				os.Exit(0)
 			}
 		}
@@ -95,6 +100,8 @@ var run = &cobra.Command{
 					if err != nil {
 						fmt.Println(err)
 					}
+					instance.DestroyKeyPair()
+					instance.DeleteLaunchTemplate()
 					return
 				}
 
@@ -104,7 +111,7 @@ var run = &cobra.Command{
 					*instance.PrivateIPAddress,
 					*instance.AMIID,
 					*instance.SpotPrice,
-					*instance.Type,
+					*instance.SelectedInstanceType,
 				)
 				instance.DestroyKeyPair()
 				err = instance.WaitForSSH()
@@ -132,6 +139,7 @@ var run = &cobra.Command{
 							instance.DestroyKeyPair()
 						}
 					}
+					instance.DeleteLaunchTemplate()
 				}
 				os.Exit(130)
 			}
@@ -146,6 +154,7 @@ var run = &cobra.Command{
 					instance.DestroyKeyPair()
 				}
 			}
+			instance.DeleteLaunchTemplate()
 		}
 
 		os.Exit(*instances[0].ExitCode)

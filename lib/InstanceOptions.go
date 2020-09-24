@@ -11,36 +11,40 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/packer/common/random"
 	"golang.org/x/crypto/ssh"
 )
 
 // InstanceOptions asdf
 type InstanceOptions struct {
-	AMI                  string
-	AMIID                string
-	AMIFilter            []string
-	Subnet               string
-	SubnetID             string
-	SubnetFilter         []string
-	SecurityGroups       []string
-	SecurityGroupIDs     []string
-	SecurityGroupFilters []string
-	IamInstanceProfile   string
-	Count                int
-	SSHKey               string
-	SSHPort              int
-	User                 string
-	IdentityFile         string
-	Tags                 []string
-	Type                 string
-	BidPrice             float64
-	UserDataFile         string
-	EntrypointFile       string
-	WaitOnCloudInit      bool
-	Attach               bool
-	NoTermination        bool
-	Command              string
-	EnvVars              []string
+	AMI                    string
+	AMIID                  string
+	AMIFilter              []string
+	Subnet                 string
+	SubnetID               string
+	SubnetFilter           []string
+	SecurityGroups         []string
+	SecurityGroupIDs       []string
+	SecurityGroupFilters   []string
+	IamInstanceProfile     string
+	Count                  int
+	SSHKey                 string
+	SSHPort                int
+	User                   string
+	IdentityFile           string
+	Tags                   []string
+	InstanceTypes          []string
+	BidPrice               float64
+	UserDataFile           string
+	EntrypointFile         string
+	WaitOnCloudInit        bool
+	Attach                 bool
+	NoTermination          bool
+	Command                string
+	EnvVars                []string
+	CreateFleetRetries     int64
+	LaunchTemplateName     string
+	BlockDurationInMinutes int64
 }
 
 // ttyColors generated with the following
@@ -119,6 +123,12 @@ func (opts *InstanceOptions) Instances() (instances []*Instance, err error) {
 		return nil, err
 	}
 
+	// Generate a random launch template name for spot fleet to avoid conflicting with other
+	// fleets running in this AWS account
+	launchTemplateName := fmt.Sprintf(
+		"%s-%s", opts.LaunchTemplateName,
+		random.AlphaNum(7))
+
 	// Build each Instance's configs
 	for i := 1; i <= opts.Count; i++ {
 		var instance Instance
@@ -131,11 +141,14 @@ func (opts *InstanceOptions) Instances() (instances []*Instance, err error) {
 		instance.BidPrice = &opts.BidPrice
 		instance.WaitOnCloudInit = &opts.WaitOnCloudInit
 		instance.Attach = &opts.Attach
-		instance.Type = &opts.Type
+		instance.InstanceTypes = &opts.InstanceTypes
 		instance.NoTermination = &opts.NoTermination
 		instance.SSHPort = &opts.SSHPort
 		instance.ExitCode = aws.Int(-1)
 		instance.EnvVars = envVars
+		instance.LaunchTemplateName = &launchTemplateName
+		instance.CreateFleetRetries = &opts.CreateFleetRetries
+		instance.BlockDurationInMinutes = &opts.BlockDurationInMinutes
 
 		if i > 1 {
 			instance.TTYColor = &ttyColors[i]

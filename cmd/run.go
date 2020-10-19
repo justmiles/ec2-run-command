@@ -51,6 +51,7 @@ func init() {
 	run.PersistentFlags().StringVar(&opts.UserDataFile, "user-data", "", "path to user-data script")
 	run.PersistentFlags().StringVar(&opts.EntrypointFile, "entrypoint", "", "path to entrypoint script")
 
+	run.PersistentFlags().BoolVar(&opts.UsePublicIP, "use-public-ip", false, "Use the instance's public IP address for SSH")
 	run.PersistentFlags().BoolVar(&opts.WaitOnCloudInit, "no-wait-cloud-init", true, "Do not wait for user-data to complete before invoking entrypoint and command")
 	run.PersistentFlags().BoolVar(&opts.NoTermination, "no-terminate", false, "Do not terminate the instance upon completion.")
 	// run.PersistentFlags().BoolVarP(&opts.Attach, "attach", "a", false, "")
@@ -108,7 +109,7 @@ var run = &cobra.Command{
 				fmt.Printf(
 					"Instance %s starting with IP %s\n  AMI: %s\n  Spot Price: %s\n  Size: %s\n",
 					*instance.InstanceID,
-					*instance.PrivateIPAddress,
+					*instance.IPAddress,
 					*instance.AMIID,
 					*instance.SpotPrice,
 					*instance.SelectedInstanceType,

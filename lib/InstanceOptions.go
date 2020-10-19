@@ -38,6 +38,7 @@ type InstanceOptions struct {
 	UserDataFile           string
 	EntrypointFile         string
 	WaitOnCloudInit        bool
+	UsePublicIP            bool
 	Attach                 bool
 	NoTermination          bool
 	Command                string
@@ -141,6 +142,7 @@ func (opts *InstanceOptions) Instances() (instances []*Instance, err error) {
 		instance.BidPrice = &opts.BidPrice
 		instance.WaitOnCloudInit = &opts.WaitOnCloudInit
 		instance.Attach = &opts.Attach
+		instance.UsePublicIP = &opts.UsePublicIP
 		instance.InstanceTypes = &opts.InstanceTypes
 		instance.NoTermination = &opts.NoTermination
 		instance.SSHPort = &opts.SSHPort

@@ -51,11 +51,12 @@ type Instance struct {
 	UserData               *string
 	EntrypointFile         *string
 	WaitOnCloudInit        *bool
+	UsePublicIP            *bool
 	Attach                 *bool
 	NoTermination          *bool
 	TTYColor               *string
 	Reservation            *ec2.Reservation
-	PrivateIPAddress       *string
+	IPAddress              *string
 	InstanceID             *string
 	SelectedInstanceType   *string
 	ExitCode               *int
@@ -87,7 +88,7 @@ func (instance *Instance) StartInstance() (err error) {
 		NetworkInterfaces: []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{
 			&ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{
 				DeviceIndex:              aws.Int64(0),
-				AssociatePublicIpAddress: aws.Bool(false),
+				AssociatePublicIpAddress: instance.UsePublicIP,
 				SubnetId:                 instance.SubnetID,
 				Groups:                   instance.SecurityGroupIDs,
 			},
@@ -231,13 +232,19 @@ func (instance *Instance) StartInstance() (err error) {
 	instance.Reservation = describeInstancesOutput.Reservations[0]
 
 	for _, ri := range instance.Reservation.Instances {
-		instance.PrivateIPAddress = ri.PrivateIpAddress
+
+		if *instance.UsePublicIP {
+			instance.IPAddress = ri.PublicIpAddress
+		} else {
+			instance.IPAddress = ri.PrivateIpAddress
+		}
+
 		instance.InstanceID = ri.InstanceId
 		instance.SelectedInstanceType = ri.InstanceType
 	}
 
-	if instance.PrivateIPAddress == nil {
-		return errors.New("looks like it didn't get created")
+	if instance.IPAddress == nil {
+		return errors.New("Unable to determine instance IP address")
 	}
 
 	descSpot, err := ec2Svc.DescribeSpotInstanceRequests(&ec2.DescribeSpotInstanceRequestsInput{
@@ -269,9 +276,9 @@ func (instance Instance) WaitForSSH() (err error) {
 	for {
 		if attempts < retries {
 			attempts++
-			fmt.Printf("Waiting for SSH %s:%d ... ", *instance.PrivateIPAddress, *instance.SSHPort)
+			fmt.Printf("Waiting for SSH %s:%d ... ", *instance.IPAddress, *instance.SSHPort)
 
-			conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", *instance.PrivateIPAddress, *instance.SSHPort), 15*time.Second)
+			conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", *instance.IPAddress, *instance.SSHPort), 15*time.Second)
 			if err != nil {
 				fmt.Printf("instance not yet available (attempt %d/%d)\n", attempts, retries)
 				time.Sleep(5 * time.Second)
@@ -283,14 +290,14 @@ func (instance Instance) WaitForSSH() (err error) {
 			}
 
 		}
-		return fmt.Errorf("\nunable to connect to %s:%d", *instance.PrivateIPAddress, *instance.SSHPort)
+		return fmt.Errorf("\nunable to connect to %s:%d", *instance.IPAddress, *instance.SSHPort)
 	}
 }
 
 // InvokeCommand over ssh connection
 func (instance *Instance) InvokeCommand() (err error) {
 
-	client, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", *instance.PrivateIPAddress, *instance.SSHPort), instance.sshConfig)
+	client, err := ssh.Dial("tcp", fmt.Sprintf("%s:%d", *instance.IPAddress, *instance.SSHPort), instance.sshConfig)
 	if err != nil {
 		return fmt.Errorf("unable to connect to SSH: %s", err)
 	}
@@ -379,7 +386,7 @@ func (instance Instance) UploadFile(filename string) (string, error) {
 	// Close the file after it has been copied
 	defer f.Close()
 
-	client := scp.NewClient(fmt.Sprintf("%s:%d", *instance.PrivateIPAddress, *instance.SSHPort), instance.sshConfig)
+	client := scp.NewClient(fmt.Sprintf("%s:%d", *instance.IPAddress, *instance.SSHPort), instance.sshConfig)
 
 	// Close client connection after the file has been copied
 	defer client.Close()
@@ -387,7 +394,7 @@ func (instance Instance) UploadFile(filename string) (string, error) {
 	// Connect to the remote server
 	err = client.Connect()
 	if err != nil {
-		return "", fmt.Errorf("Couldn't establish an SCP connection to %s:%d: %s", *instance.PrivateIPAddress, *instance.SSHPort, err)
+		return "", fmt.Errorf("Couldn't establish an SCP connection to %s:%d: %s", *instance.IPAddress, *instance.SSHPort, err)
 	}
 
 	// Finaly, copy the file over
@@ -531,7 +538,7 @@ func (instance *Instance) String() string {
 
 	s = s + fmt.Sprintf("TTYColor: %s\n", stringPointerValueOrNil(instance.TTYColor, ""))
 
-	s = s + fmt.Sprintf("PrivateIPAddress: %s\n", stringPointerValueOrNil(instance.PrivateIPAddress, ""))
+	s = s + fmt.Sprintf("IPAddress: %s\n", stringPointerValueOrNil(instance.IPAddress, ""))
 
 	if instance.InstanceID != nil {
 		s = s + fmt.Sprintf("InstanceID: %s\n", *instance.InstanceID)

@@ -102,6 +102,19 @@ func (instance *Instance) StartInstance() (err error) {
 		},
 	}
 
+	// Configure block device
+	// TODO: add parameters for cutom block device mappings
+	launchTemplateData.BlockDeviceMappings = []*ec2.LaunchTemplateBlockDeviceMappingRequest{
+		{
+			DeviceName: aws.String("/dev/xvda"), // assumes amazon linux OS
+			Ebs: &ec2.LaunchTemplateEbsBlockDeviceRequest{
+				DeleteOnTermination: aws.Bool(true),
+				VolumeSize:          aws.Int64(500),
+				VolumeType:          aws.String("gp2"),
+			},
+		},
+	}
+
 	if *instance.BlockDurationInMinutes > 0 {
 		launchTemplateData.InstanceMarketOptions.SpotOptions.BlockDurationMinutes = instance.BlockDurationInMinutes
 	}
